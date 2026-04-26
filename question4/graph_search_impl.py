@@ -42,7 +42,7 @@ class Graph:
             for i in range(self.V):
                 if self.adj[v][i] == 1:
                     neighbors.append(i)
-                return neighbors
+            return neighbors
 
 
 # ---------- Search and Wrapper Functions ----------
@@ -62,7 +62,7 @@ def bfs(graph, start, target):
         if curr == target:
             return path
             
-        for neighbor in graph.get_neighbors(curr):
+        for neighbor in graph.explore(curr):
             if neighbor not in visited:
                 visited.add(neighbor)
                 # Create a new path and add it to the queue
@@ -84,9 +84,8 @@ def dfs(graph, start, target):
         if curr == target:
             return path
             
-        # We don't mark visited until we pop for traditional DFS, 
-        # but marking during push is more efficient for pathfinding.
-        for neighbor in graph.get_neighbors(curr):
+        # don't mark visited until pop usually, but mark during push more efficient and still works fine?
+        for neighbor in graph.explore(curr):
             if neighbor not in visited:
                 visited.add(neighbor)
                 new_path = list(path)
@@ -94,6 +93,28 @@ def dfs(graph, start, target):
                 stack.append(new_path)
     return None
 
+
+# wrapper to run with bfs/dfs for a given graph and find the run time and memory
+def benchmark(algo, graph, start, target):
+    times = []
+    mem_usages = []
+    
+    for i in range(5):
+        tracemalloc.start()
+
+        start_time = time.perf_counter()
+        path = algo(graph, start, target)
+        end_time = time.perf_counter()
+
+        i, peak_mem = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        
+        times.append(end_time - start_time)
+        mem_usages.append(peak_mem)
+    
+    avg_time = sum(times) / 5
+    avg_mem = sum(mem_usages) / 5
+    return path, avg_time, avg_mem
 
 
 # ---------- Main Func to make graphs and run benchmarking  ----------
@@ -198,25 +219,36 @@ def main():
 
     # benchmarking
 
+    print(" --- Benchmarking graph (a) for path from vertex 0 to 7 --- ")
+    # bfs on adj list for a
+    path, t, mem = benchmark(bfs, a_list, 0, 7)
+    print("BFS List: path = " + str(path) + ", time = " + str(t) + ", memory = " + str(mem) + " bytes")
+    # dfs on adj list for a
+    path, t, mem = benchmark(dfs, a_list, 0, 7)
+    print("DFS List: path = " + str(path) + ", time = " + str(t) + ", memory = " + str(mem) + " bytes")
+
+    # bfs on adj mat for a
+    path, t, mem = benchmark(bfs, a_mat, 0, 7)
+    print("BFS Matrix: path = " + str(path) + ", time = " + str(t) + ", memory = " + str(mem) + " bytes")
+    # dfs on adj mat for a
+    path, t, mem = benchmark(dfs, a_mat, 0, 7)
+    print("DFS Matrix: path = " + str(path) + ", time = " + str(t) + ", memory = " + str(mem) + " bytes")
 
 
+    print("\n --- Benchmarking graph (b) for path from vertex A to O --- ")
+    # bfs on adj list for b
+    path, t, mem = benchmark(bfs, b_list, char_map['A'], char_map['O'])
+    print("BFS List: path = " + str(path) + ", time = " + str(t) + ", memory = " + str(mem) + " bytes")
+    # dfs on adj list for b
+    path, t, mem = benchmark(dfs, b_list, char_map['A'], char_map['O'])
+    print("DFS List: path = " + str(path) + ", time = " + str(t) + ", memory = " + str(mem) + " bytes")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # bfs on adj mat for b
+    path, t, mem = benchmark(bfs, b_mat, char_map['A'], char_map['O'])
+    print("BFS Matrix: path = " + str(path) + ", time = " + str(t) + ", memory = " + str(mem) + " bytes")
+    # dfs on adj mat for b
+    path, t, mem = benchmark(dfs, b_mat, char_map['A'], char_map['O'])
+    print("DFS Matrix: path = " + str(path) + ", time = " + str(t) + ", memory = " + str(mem) + " bytes")
 
 
     print("-----------------------")
